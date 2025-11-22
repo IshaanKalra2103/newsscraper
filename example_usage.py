@@ -7,6 +7,9 @@ This script demonstrates how to:
 2. Filter by categories and keywords
 3. Retrieve and analyze articles
 4. Get statistics
+
+To run this example:
+    uv run python example_usage.py
 """
 
 import requests
@@ -27,7 +30,7 @@ def check_api_health():
             print("✗ API is not responding correctly\n")
             return False
     except requests.exceptions.ConnectionError:
-        print("✗ Cannot connect to API. Make sure the server is running (python run.py)\n")
+        print("✗ Cannot connect to API. Make sure the server is running (uv run python run.py)\n")
         return False
 
 

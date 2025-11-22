@@ -16,24 +16,25 @@ A powerful API for scraping and analyzing news articles from multiple sources wi
 
 ### Installation
 
+**Prerequisites**: Install [uv](https://github.com/astral-sh/uv) (fast Python package installer):
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd newsscraper
 ```
 
-2. Create a virtual environment:
+2. Install dependencies with uv:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+uv sync
 ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+This automatically creates a virtual environment and installs all dependencies.
 
-4. (Optional) Configure environment variables:
+3. (Optional) Configure environment variables:
 ```bash
 cp .env.example .env
 # Edit .env with your preferences
@@ -41,8 +42,14 @@ cp .env.example .env
 
 ### Running the API
 
-Start the server:
+Start the server with uv:
 ```bash
+uv run python run.py
+```
+
+Or activate the virtual environment and run normally:
+```bash
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 python run.py
 ```
 
@@ -389,7 +396,19 @@ financial_articles = requests.get(
 
 ### Running Tests
 ```bash
-pytest tests/
+uv run pytest tests/
+```
+
+### Adding Dependencies
+```bash
+# Add a new dependency
+uv add package-name
+
+# Add a development dependency
+uv add --dev package-name
+
+# Update all dependencies
+uv sync
 ```
 
 ### Adding a New Scraper
