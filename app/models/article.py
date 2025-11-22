@@ -7,6 +7,36 @@ from pydantic import BaseModel
 from app.database.db import Base
 
 
+def get_time_period(published_date: Optional[datetime]) -> Optional[str]:
+    """
+    Determine the time period for an article based on publication date.
+
+    Periods:
+    - "2002-2018": Early period (2002 to end of 2018)
+    - "2018-2022": Middle period (2019 to end of 2022)
+    - "2023-2024": Recent period (2023 onwards)
+
+    Args:
+        published_date: The publication date of the article
+
+    Returns:
+        Time period string or None if date is outside range or None
+    """
+    if not published_date:
+        return None
+
+    year = published_date.year
+
+    if 2002 <= year <= 2018:
+        return "2002-2018"
+    elif 2019 <= year <= 2022:
+        return "2018-2022"
+    elif 2023 <= year <= 2024:
+        return "2023-2024"
+    else:
+        return None
+
+
 class ArticleDB(Base):
     """Database model for articles."""
 
@@ -27,6 +57,9 @@ class ArticleDB(Base):
     categories = Column(JSON, nullable=True)  # List of categories (energy, financial, AI)
     relevance_score = Column(Integer, default=0)  # How relevant based on keywords
 
+    # Time Period (2002-2018, 2018-2022, 2023-2024)
+    time_period = Column(String(20), nullable=True, index=True)
+
     # Metadata
     image_url = Column(String(1000), nullable=True)
     tags = Column(JSON, nullable=True)
@@ -45,6 +78,7 @@ class ArticleCreate(BaseModel):
     keywords: Optional[List[str]] = None
     categories: Optional[List[str]] = None
     relevance_score: Optional[int] = 0
+    time_period: Optional[str] = None
     image_url: Optional[str] = None
     tags: Optional[List[str]] = None
 
@@ -64,6 +98,7 @@ class Article(BaseModel):
     keywords: Optional[List[str]] = None
     categories: Optional[List[str]] = None
     relevance_score: int = 0
+    time_period: Optional[str] = None
     image_url: Optional[str] = None
     tags: Optional[List[str]] = None
 

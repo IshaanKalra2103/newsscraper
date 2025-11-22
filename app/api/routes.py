@@ -11,7 +11,8 @@ from app.models.article import (
     ArticleCreate,
     ArticleDB,
     ScrapeRequest,
-    ScrapeResponse
+    ScrapeResponse,
+    get_time_period
 )
 from app.scrapers.scraper_factory import ScraperFactory
 from app.nlp.keyword_extractor import KeywordExtractor
@@ -89,7 +90,10 @@ async def scrape_news(
                 article_data.categories = nlp_result["categories"]
                 article_data.relevance_score = nlp_result["relevance_score"]
 
-                # Filter by date if specified
+                # Assign time period based on published date
+                article_data.time_period = get_time_period(article_data.published_date)
+
+                # Filter by date if specified (default to 2002-2024 range)
                 if request.date_from and article_data.published_date:
                     if article_data.published_date < request.date_from:
                         continue
@@ -97,6 +101,10 @@ async def scrape_news(
                 if request.date_to and article_data.published_date:
                     if article_data.published_date > request.date_to:
                         continue
+
+                # Only include articles within 2002-2024 period
+                if article_data.time_period is None:
+                    continue
 
                 # Check if article already exists
                 existing = db.query(ArticleDB).filter(
@@ -138,6 +146,7 @@ async def get_articles(
     category: Optional[str] = None,
     keyword: Optional[str] = None,
     min_relevance: Optional[int] = None,
+    time_period: Optional[str] = Query(None, description="Time period: 2002-2018, 2018-2022, or 2023-2024"),
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     db: Session = Depends(get_db)
@@ -152,6 +161,7 @@ async def get_articles(
         category: Filter by category (energy, financial, ai)
         keyword: Filter by keyword
         min_relevance: Minimum relevance score
+        time_period: Filter by time period (2002-2018, 2018-2022, 2023-2024)
         date_from: Filter by published date from
         date_to: Filter by published date to
         db: Database session
@@ -173,6 +183,9 @@ async def get_articles(
 
     if min_relevance is not None:
         query = query.filter(ArticleDB.relevance_score >= min_relevance)
+
+    if time_period:
+        query = query.filter(ArticleDB.time_period == time_period)
 
     if date_from:
         query = query.filter(ArticleDB.published_date >= date_from)
@@ -242,6 +255,19 @@ async def get_stats(db: Session = Depends(get_db)):
         ).count(),
     }
 
+    # Count by time period
+    time_period_counts = {
+        "2002-2018": db.query(ArticleDB).filter(
+            ArticleDB.time_period == "2002-2018"
+        ).count(),
+        "2018-2022": db.query(ArticleDB).filter(
+            ArticleDB.time_period == "2018-2022"
+        ).count(),
+        "2023-2024": db.query(ArticleDB).filter(
+            ArticleDB.time_period == "2023-2024"
+        ).count(),
+    }
+
     # Get date range
     earliest = db.query(ArticleDB).order_by(
         ArticleDB.published_date.asc()
@@ -254,6 +280,7 @@ async def get_stats(db: Session = Depends(get_db)):
         "total_articles": total_articles,
         "by_source": source_counts,
         "by_category": category_counts,
+        "by_time_period": time_period_counts,
         "date_range": {
             "earliest": earliest.published_date if earliest else None,
             "latest": latest.published_date if latest else None
