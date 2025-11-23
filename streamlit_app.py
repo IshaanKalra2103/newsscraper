@@ -377,15 +377,19 @@ def main():
 
         with col2:
             date_range = stats.get("date_range", {})
-            earliest = date_range.get("earliest", "N/A")
-            if earliest != "N/A":
+            earliest = date_range.get("earliest")
+            if earliest and earliest != "N/A":
                 earliest = earliest[:10]
+            else:
+                earliest = "N/A"
             st.metric("Earliest Article", earliest)
 
         with col3:
-            latest = date_range.get("latest", "N/A")
-            if latest != "N/A":
+            latest = date_range.get("latest")
+            if latest and latest != "N/A":
                 latest = latest[:10]
+            else:
+                latest = "N/A"
             st.metric("Latest Article", latest)
 
         with col4:
