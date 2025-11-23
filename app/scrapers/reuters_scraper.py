@@ -43,7 +43,8 @@ class ReutersScraper(BaseScraper):
             if len(articles) >= max_articles:
                 break
 
-            soup = self.fetch_page(section_url)
+            # Use stealth mode for Reuters (they block regular scrapers)
+            soup = self.fetch_page(section_url, use_stealth=True)
             if not soup:
                 continue
 
