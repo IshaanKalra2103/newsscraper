@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.database.db import get_db
 from app.models.article import (
@@ -19,6 +19,15 @@ from app.nlp.keyword_extractor import KeywordExtractor
 
 router = APIRouter()
 keyword_extractor = KeywordExtractor()
+
+
+def make_timezone_naive(dt: Optional[datetime]) -> Optional[datetime]:
+    """Convert timezone-aware datetime to naive datetime."""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.replace(tzinfo=None)
+    return dt
 
 
 @router.get("/")
@@ -89,6 +98,9 @@ async def scrape_news(
                 article_data.keywords = nlp_result["keywords"]
                 article_data.categories = nlp_result["categories"]
                 article_data.relevance_score = nlp_result["relevance_score"]
+
+                # Normalize published_date to timezone-naive for comparisons
+                article_data.published_date = make_timezone_naive(article_data.published_date)
 
                 # Assign time period based on published date
                 article_data.time_period = get_time_period(article_data.published_date)
